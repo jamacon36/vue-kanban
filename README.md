@@ -2,13 +2,21 @@
 
 > A drag and drop kanban board component
 
-### [Demo](https://brockreece.github.io/vue-kanban/)
+### [Demo](https://vue-kanban.netlify.com/)
 
-### Installation
+## Installation
+
+### Vue CLI
+You can install this plugin through the [Vue CLI](https://cli.vuejs.org/)
+```
+vue add vue-cli-plugin-kanban
+```
+
+### Manual installation
 
 Add vue-kanban to your project with npm
 ``` bash
-npm install vue-kanban 
+npm install vue-kanban
 ```
 
 ... or yarn
@@ -16,23 +24,23 @@ npm install vue-kanban
 yarn add vue-kanban
 ```
 
-### Basic Usage
-
-Install the plugin
+Then install the plugin in your entry file
 ```js
 import vueKanban from 'vue-kanban'
 
 Vue.use(vueKanban)
 ```
 
-and then use the component in your project.
+## Basic Usage
+
+The `kanban-board` component has been added globally to your project and so can be used in your templates without having to explicitly import it.
 ```html
 <kanban-board :stages="stages" :blocks="blocks"></kanban-board>
 ```
 
-#### Props
-- stages: an array of stages for the kanban board
-- blocks: an array of objects that will make up the blocks on the kanban board
+### Required Props
+- **stages**: an array of stages for the kanban board
+- **blocks**: an array of objects that will make up the blocks on the kanban board
 ```js
 {
   stages: ['on-hold', 'in-progress', 'needs-review', 'approved'],
@@ -43,6 +51,20 @@ and then use the component in your project.
       title: 'Test',
     },
   ],
+}
+```
+
+### Advanced Props
+- **config**: an object of dragula options to be passed to the kanban board, see [dragula docs](https://github.com/bevacqua/dragula#dragulacontainers-options) for more details
+- **state-machine-config**: an xstate config object that can be used to manage the kanban board, read [here](#state-machine) for more details
+```js
+{
+  config: {
+    // Don't allow blocks to be moved out of the approved stage
+    accepts(block, target, source) {
+      return source.dataset.status !== 'approved',
+    }
+  }
 }
 ```
 
@@ -62,7 +84,7 @@ The component will emit an event when a block is moved
 </script>
 ```
 
-### Add some style
+## Add some style
 I have included a scss stylesheet in this repo as a starting point that can be used in your project
 ```html
 <style lang="scss">
@@ -86,4 +108,43 @@ Each block has a named slot which can be extended from the parent, like so...
     </div>
   </div>
 </kanban-board>
+```
+
+### State machine
+Vue-kanban is now compatible with [xstate](https://xstate.js.org/docs/) state machines.
+
+You can pass an xstate config as a prop and the Kanban board will use the state machine to restrict which moves are allowed.
+
+As an example we can achieve the following workflow
+
+![Read more words!](/src/assets/fsm.png)
+
+With the following config
+```js
+stateMachineConfig: {
+  id: 'kanban',
+  initial: 'on-hold',
+  states: {
+    'on-hold': {
+      on: {
+        PICK_UP: 'in-progress',
+      },
+    },
+    'in-progress': {
+      on: {
+        RELINQUISH_TASK: 'on-hold',
+        PUSH_TO_QA: 'needs-review',
+      },
+    },
+    'needs-review': {
+      on: {
+        REQUEST_CHANGE: 'in-progress',
+        PASS_QA: 'approved',
+      },
+    },
+    approved: {
+      type: 'final',
+    },
+  },
+},
 ```
