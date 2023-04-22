@@ -5,3 +5,5 @@ export default {
     vue.component('kanban-board', Kanban);
   },
 };
+
+export const KanbanComponent = Kanban;
